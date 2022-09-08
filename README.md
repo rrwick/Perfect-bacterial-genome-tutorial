@@ -2,4 +2,4 @@
 
 This repo contains a tutorial for assembling a bacterial genome to perfection using short and long reads.
 
-Head over the [this repo's wiki](https://github.com/rrwick/Perfect-bacterial-genome-tutorial/wiki) for the tutorial and supporting content.
+Head over to [this repo's wiki](https://github.com/rrwick/Perfect-bacterial-genome-tutorial/wiki) for the tutorial and all supporting content.
