@@ -1,4 +1,4 @@
-<p align="center"><picture><img src="images/logo.png" alt="Logo" width="50%"></picture></p>
+<p align="center"><picture><source srcset="images/logo-dark.png" media="(prefers-color-scheme: dark)"><img src="images/logo.png" alt="Logo" width="50%"></picture></p>
 
 This repo contains a tutorial for assembling a bacterial genome to perfection using a combination of short and long reads.
 
