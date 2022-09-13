@@ -568,7 +568,7 @@ def get_timestamp():
 
 def check_python_version():
     if sys.version_info.major < 3 or sys.version_info.minor < 6:
-        sys.exit('\nError: polypolish_human_readable.py requires Python 3.6 or later')
+        sys.exit('\nError: compare_assemblies.py requires Python 3.6 or later')
 
 
 if __name__ == '__main__':
