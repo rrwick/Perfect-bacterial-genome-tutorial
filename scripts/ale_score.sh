@@ -25,6 +25,15 @@
 # should have received a copy of the GNU General Public License along with this program. If not,
 # see <https://www.gnu.org/licenses/>.
 
+if [[ -z "$1" ]] ; then echo "you must provide an assembly filename"; exit 1; fi
+if [[ -z "$2" ]] ; then echo "you must provide read filenames"; exit 1; fi
+if [[ -z "$3" ]] ; then echo "you must provide read filenames"; exit 1; fi
+if [[ -z "$4" ]] ; then echo "you must provide a thread count"; exit 1; fi
+
+if [[ ! -f "$1" ]] ; then echo $1" does not exist"; exit 1; fi
+if [[ ! -f "$2" ]] ; then echo $2" does not exist"; exit 1; fi
+if [[ ! -f "$3" ]] ; then echo $3" does not exist"; exit 1; fi
+
 index=$(mktemp)
 sam_file=$(mktemp)
 ale_file=$(mktemp)
