@@ -15,6 +15,8 @@
 # Example usage:
 # ale_score.sh assembly.fasta reads/illumina_1.fastq.gz reads/illumina_2.fastq.gz 16
 
+# Requirements: BWA and ALE
+
 # Copyright 2022 Ryan Wick (rrwick@gmail.com)
 
 # This program is free software: you can redistribute it and/or modify it under the terms of the
