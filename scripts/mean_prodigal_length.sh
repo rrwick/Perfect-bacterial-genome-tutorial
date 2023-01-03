@@ -28,7 +28,7 @@ if [[ ! -f "$1" ]] ; then echo $1" does not exist"; exit 1; fi
 
 prod=$(mktemp)
 
-prodigal -a "$prod" -i trycycler.fasta > /dev/null
+prodigal -a "$prod" -i $1 > /dev/null
 seqtk seq "$prod" | awk 'NR % 2 == 0' | awk '{sum += length($0); n++} END {print sum/n;}' > "$1".prod
 
 rm "$prod"
