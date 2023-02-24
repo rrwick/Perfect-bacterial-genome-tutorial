@@ -1,0 +1,32 @@
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - bowtie2>=2.5.1               # https://github.com/BenLangmead/bowtie2
+  - bwa>=0.7.17                  # https://github.com/lh3/bwa
+  - canu>=2.2                    # https://github.com/marbl/canu
+  - fastp>=0.23.2                # https://github.com/OpenGene/fastp
+  - filtlong>=0.2.1              # https://github.com/rrwick/Filtlong
+  - flye>=2.9.1                  # https://github.com/fenderglass/Flye
+  - fmlrc2>=0.1.7                # https://github.com/HudsonAlpha/fmlrc2
+  - mash>=2.3                    # https://github.com/marbl/Mash
+  - masurca>=4.0.9               # https://github.com/alekseyzimin/masurca
+  - medaka>=1.7.2                # https://github.com/nanoporetech/medaka
+  - miniasm>=0.3                 # https://github.com/lh3/miniasm
+  - minimap2>=2.24               # https://github.com/lh3/minimap2
+  - minipolish>=0.1.3            # https://github.com/rrwick/Minipolish
+  - muscle<4                     # https://drive5.com/muscle/downloads_v3.htm
+  - necat>=0.0.1_update20200803  # https://github.com/xiaochuanle/NECAT
+  - nthits>=0.0.1                # https://github.com/bcgsc/nthits
+  - ntedit>=1.3.5                # https://github.com/bcgsc/ntEdit
+  - polypolish>=0.5.0            # https://github.com/rrwick/Polypolish
+  - prodigal>=2.6.3              # https://github.com/hyattpd/Prodigal
+  - python>=3.8                  # https://www.python.org/
+  - racon>=1.5.0                 # https://github.com/lbcb-sci/racon
+  - raven-assembler>=1.8.1       # https://github.com/lbcb-sci/raven
+  - ropebwt2>=r187               # https://github.com/lh3/ropebwt2
+  - samtools>=1.16               # https://github.com/samtools/samtools
+  - seqtk>=1.3                   # https://github.com/lh3/seqtk
+  - shasta>=0.11.1               # https://github.com/paoloshasta/shasta
+  - trycycler>=0.5.3             # https://github.com/rrwick/Trycycler
