@@ -115,8 +115,8 @@ def load_assemblies(assembly_1_filename, assembly_2_filename):
         log(f'  {name}: {len(seq):,} bp')
     log()
     if len(assembly_1) != len(assembly_2):
-        quit_with_error('Error: the assembly_1 and assembly_2 assemblies need to contain the same number '
-                        'of sequences')
+        quit_with_error('Error: the assembly_1 and assembly_2 assemblies need to contain the same '
+                        'number of sequences')
     for b, a in zip(assembly_1, assembly_2):
         assembly_1_name, assembly_1_seq = b
         assembly_1_seq_len = len(assembly_1_seq)
@@ -126,8 +126,8 @@ def load_assemblies(assembly_1_filename, assembly_2_filename):
             quit_with_error('Error: zero-length sequences are not allowed')
         ratio = assembly_1_seq_len / assembly_2_seq_len
         if ratio < 0.9 or ratio > 1.11111111:
-            quit_with_error(f'Error: {assembly_1_name} and {assembly_2_name} are too different in length '
-                            f'- are the files in the same order?')
+            quit_with_error(f'Error: {assembly_1_name} and {assembly_2_name} are too different in '
+                            f'length - are the files in the same order?')
     return assembly_1, assembly_2
 
 
@@ -137,8 +137,8 @@ def align_sequences(assembly_1, assembly_2, padding, merge, aligner):
     for b, a in zip(assembly_1, assembly_2):
         assembly_1_name, assembly_1_seq = b
         assembly_2_name, assembly_2_seq = a
-        output_differences(assembly_1_name, assembly_1_seq, assembly_2_name, assembly_2_seq, padding, merge,
-                           longest_label, aligner)
+        output_differences(assembly_1_name, assembly_1_seq, assembly_2_name, assembly_2_seq,
+                           padding, merge, longest_label, aligner)
 
 
 def get_longest_label(assembly_1, assembly_2):
@@ -149,15 +149,18 @@ def get_longest_label(assembly_1, assembly_2):
     return longest_name + 2*longest_seq + 3
 
 
-def output_differences(assembly_1_name, assembly_1_seq, assembly_2_name, assembly_2_seq, padding, merge,
-                       longest_label, aligner):
+def output_differences(assembly_1_name, assembly_1_seq, assembly_2_name, assembly_2_seq, padding,
+                       merge, longest_label, aligner):
     log(f'Aligning {assembly_1_name} to {assembly_2_name}:')
-    assembly_1_aligned, assembly_2_aligned, differences, assembly_1_pos, assembly_2_pos, diff_pos = \
-        get_aligned_seqs(assembly_1_seq, assembly_2_seq, aligner)
+    assembly_1_aligned, assembly_2_aligned, differences, assembly_1_pos, assembly_2_pos, diff_pos, \
+        expanded_cigar = get_aligned_seqs(assembly_1_seq, assembly_2_seq, aligner)
     if len(diff_pos) == 1:
         log(f'  1 difference')
     else:
         log(f'  {len(diff_pos):,} differences')
+    log(f'  worst 10 bp identity:   {worst_window_identity(expanded_cigar, 10)}%')
+    log(f'  worst 100 bp identity:  {worst_window_identity(expanded_cigar, 100)}%')
+    log(f'  worst 1000 bp identity: {worst_window_identity(expanded_cigar, 1000)}%')
     log()
 
     aligned_len = len(assembly_1_aligned)
@@ -169,8 +172,10 @@ def output_differences(assembly_1_name, assembly_1_seq, assembly_2_name, assembl
         assembly_2_start, assembly_2_end = assembly_2_pos[start], assembly_2_pos[end]
 
         # Sanity check:
-        assert assembly_1_aligned[start:end].replace('-', '') == assembly_1_seq[assembly_1_start:assembly_1_end]
-        assert assembly_2_aligned[start:end].replace('-', '') == assembly_2_seq[assembly_2_start:assembly_2_end]
+        assert assembly_1_aligned[start:end].replace('-', '') == \
+            assembly_1_seq[assembly_1_start:assembly_1_end]
+        assert assembly_2_aligned[start:end].replace('-', '') == \
+            assembly_2_seq[assembly_2_start:assembly_2_end]
 
         # Add 1 to starts to convert from 0-based exclusive ranges to 1-based inclusive ranges.
         assembly_1_label = f'{assembly_1_name} {assembly_1_start+1}-{assembly_1_end}:'
@@ -211,6 +216,7 @@ def get_aligned_seqs(assembly_1_seq, assembly_2_seq, aligner):
     i, j = 0, 0
     assembly_1_aligned, assembly_2_aligned, differences = [], [], []
     assembly_1_positions, assembly_2_positions, diff_positions = [], [], []
+    new_expanded_cigar = []
     for c in expanded_cigar:
         assembly_1_positions.append(i)
         assembly_2_positions.append(j)
@@ -219,8 +225,10 @@ def get_aligned_seqs(assembly_1_seq, assembly_2_seq, aligner):
             b_2 = assembly_2_seq[j]
             if b_1 == b_2:
                 diff = ' '
+                new_expanded_cigar.append('=')
             else:
                 diff = '*'
+                new_expanded_cigar.append('X')
                 diff_positions.append(len(differences))
             i += 1
             j += 1
@@ -228,6 +236,7 @@ def get_aligned_seqs(assembly_1_seq, assembly_2_seq, aligner):
             b_1 = assembly_1_seq[i]
             b_2 = assembly_2_seq[j]
             diff = ' '
+            new_expanded_cigar.append('=')
             i += 1
             j += 1
             assert b_1 == b_2
@@ -235,6 +244,7 @@ def get_aligned_seqs(assembly_1_seq, assembly_2_seq, aligner):
             b_1 = assembly_1_seq[i]
             b_2 = assembly_2_seq[j]
             diff = '*'
+            new_expanded_cigar.append('X')
             diff_positions.append(len(differences))
             i += 1
             j += 1
@@ -243,12 +253,14 @@ def get_aligned_seqs(assembly_1_seq, assembly_2_seq, aligner):
             b_1 = assembly_1_seq[i]
             b_2 = '-'
             diff = '*'
+            new_expanded_cigar.append('I')
             diff_positions.append(len(differences))
             i += 1
         elif c == 'D':
             b_1 = '-'
             b_2 = assembly_2_seq[j]
             diff = '*'
+            new_expanded_cigar.append('D')
             diff_positions.append(len(differences))
             j += 1
         else:
@@ -265,17 +277,39 @@ def get_aligned_seqs(assembly_1_seq, assembly_2_seq, aligner):
         assert differences[p] == '*'
     assert assembly_1_aligned.replace('-', '') == assembly_1_seq
     assert assembly_2_aligned.replace('-', '') == assembly_2_seq
+    new_expanded_cigar = ''.join(new_expanded_cigar)
     return assembly_1_aligned, assembly_2_aligned, differences, \
-        assembly_1_positions, assembly_2_positions, diff_positions
+        assembly_1_positions, assembly_2_positions, diff_positions, new_expanded_cigar
 
 
 def get_cigar(assembly_1_seq, assembly_2_seq, aligner):
+    if assembly_1_seq == assembly_2_seq:
+        return f'{len(assembly_1_seq)}='
     if aligner == 'mappy':
         return get_cigar_with_mappy(assembly_1_seq, assembly_2_seq)
     elif aligner == 'edlib':
         return get_cigar_with_edlib(assembly_1_seq, assembly_2_seq)
     else:
         assert False
+
+
+def worst_window_identity(expanded_cigar, window_size):
+    cigar_len = len(expanded_cigar)
+    if cigar_len <= window_size:
+        return 100.0 * expanded_cigar.count('=') / cigar_len
+    start, end = 0, window_size
+    window_match_count = expanded_cigar[start:end].count('=')
+    min_match_count = window_match_count
+    while end < cigar_len:
+        if expanded_cigar[start] == '=':
+            window_match_count -= 1
+        if expanded_cigar[end] == '=':
+            window_match_count += 1
+        if window_match_count < min_match_count:
+            min_match_count = window_match_count
+        start += 1
+        end += 1
+    return 100.0 * min_match_count / window_size
 
 
 def get_cigar_with_mappy(assembly_1_seq, assembly_2_seq):
@@ -624,3 +658,40 @@ def test_make_diff_ranges():
     aligned_len = 200
     diff_ranges = make_diff_ranges(diff_pos, padding, merge, aligned_len)
     assert diff_ranges == [(0, 13), (185, 200)]
+
+
+def test_worst_window_identity():
+    import pytest
+    ex = get_expanded_cigar
+
+    assert worst_window_identity(ex('1000=1X1000='), 10) == pytest.approx(90.0)
+    assert worst_window_identity(ex('1000=1X1000='), 100) == pytest.approx(99.0)
+    assert worst_window_identity(ex('1000=1X1000='), 1000) == pytest.approx(99.9)
+
+    assert worst_window_identity(ex('1X1000='), 10) == pytest.approx(90.0)
+    assert worst_window_identity(ex('1X1000='), 100) == pytest.approx(99.0)
+    assert worst_window_identity(ex('1X1000='), 1000) == pytest.approx(99.9)
+
+    assert worst_window_identity(ex('1000=1X'), 10) == pytest.approx(90.0)
+    assert worst_window_identity(ex('1000=1X'), 100) == pytest.approx(99.0)
+    assert worst_window_identity(ex('1000=1X'), 1000) == pytest.approx(99.9)
+
+    assert worst_window_identity(ex('1000=1X10=1X1000='), 1000) == pytest.approx(99.8)
+    assert worst_window_identity(ex('1000=1X100=1X1000='), 1000) == pytest.approx(99.8)
+    assert worst_window_identity(ex('1000=1X998=1X1000='), 1000) == pytest.approx(99.8)
+    assert worst_window_identity(ex('1000=1X999=1X1000='), 1000) == pytest.approx(99.9)
+
+    assert worst_window_identity(ex('1000=5I10=5D1000='), 1000) == pytest.approx(99.0)
+    assert worst_window_identity(ex('1000=5I100=5D1000='), 1000) == pytest.approx(99.0)
+    assert worst_window_identity(ex('1000=5I1000=5D1000='), 1000) == pytest.approx(99.5)
+
+    assert worst_window_identity(ex('50=1X49='), 10) == pytest.approx(90.0)
+    assert worst_window_identity(ex('50=1X49='), 50) == pytest.approx(98.0)
+    assert worst_window_identity(ex('50=1X49='), 100) == pytest.approx(99.0)
+    assert worst_window_identity(ex('50=1X49='), 1000) == pytest.approx(99.0)
+    assert worst_window_identity(ex('50=1X49='), 1000000) == pytest.approx(99.0)
+
+
+def test_get_cigar():
+    assert get_cigar('ACGATCGACATCACGACT', 'ACGATCGACATCACGACT', 'edlib') == '18='
+    assert get_cigar('ACGATCGACATCACGACT', 'ACGATCGATATCACGACT', 'edlib') == '8=1X9='
