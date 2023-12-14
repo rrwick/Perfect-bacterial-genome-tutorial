@@ -268,6 +268,8 @@ def get_aligned_seqs(assembly_1_seq, assembly_2_seq, aligner):
         assembly_1_aligned.append(b_1)
         assembly_2_aligned.append(b_2)
         differences.append(diff)
+    assembly_1_positions.append(i)
+    assembly_2_positions.append(j)
     assert i == len(assembly_1_seq)
     assert j == len(assembly_2_seq)
     assembly_1_aligned = ''.join(assembly_1_aligned)
