@@ -154,13 +154,14 @@ def output_differences(assembly_1_name, assembly_1_seq, assembly_2_name, assembl
     log(f'Aligning {assembly_1_name} to {assembly_2_name}:')
     assembly_1_aligned, assembly_2_aligned, differences, assembly_1_pos, assembly_2_pos, diff_pos, \
         expanded_cigar = get_aligned_seqs(assembly_1_seq, assembly_2_seq, aligner)
-    if len(diff_pos) == 1:
+    diff_count = len(diff_pos)
+    if diff_count == 1:
         log(f'  1 difference')
     else:
-        log(f'  {len(diff_pos):,} differences')
-    log(f'  worst 10 bp identity:   {worst_window_identity(expanded_cigar, 10)}%')
-    log(f'  worst 100 bp identity:  {worst_window_identity(expanded_cigar, 100)}%')
-    log(f'  worst 1000 bp identity: {worst_window_identity(expanded_cigar, 1000)}%')
+        log(f'  {diff_count:,} differences')
+    log(f'  worst 10 bp identity:   {worst_window_identity(diff_count, expanded_cigar, 10)}%')
+    log(f'  worst 100 bp identity:  {worst_window_identity(diff_count, expanded_cigar, 100)}%')
+    log(f'  worst 1000 bp identity: {worst_window_identity(diff_count, expanded_cigar, 1000)}%')
     log()
 
     aligned_len = len(assembly_1_aligned)
@@ -295,7 +296,9 @@ def get_cigar(assembly_1_seq, assembly_2_seq, aligner):
         assert False
 
 
-def worst_window_identity(expanded_cigar, window_size):
+def worst_window_identity(diff_count, expanded_cigar, window_size):
+    if diff_count == 0:
+        return 100.0
     cigar_len = len(expanded_cigar)
     if cigar_len <= window_size:
         return 100.0 * expanded_cigar.count('=') / cigar_len
@@ -666,32 +669,32 @@ def test_worst_window_identity():
     import pytest
     ex = get_expanded_cigar
 
-    assert worst_window_identity(ex('1000=1X1000='), 10) == pytest.approx(90.0)
-    assert worst_window_identity(ex('1000=1X1000='), 100) == pytest.approx(99.0)
-    assert worst_window_identity(ex('1000=1X1000='), 1000) == pytest.approx(99.9)
+    assert worst_window_identity(1, ex('1000=1X1000='), 10) == pytest.approx(90.0)
+    assert worst_window_identity(1, ex('1000=1X1000='), 100) == pytest.approx(99.0)
+    assert worst_window_identity(1, ex('1000=1X1000='), 1000) == pytest.approx(99.9)
 
-    assert worst_window_identity(ex('1X1000='), 10) == pytest.approx(90.0)
-    assert worst_window_identity(ex('1X1000='), 100) == pytest.approx(99.0)
-    assert worst_window_identity(ex('1X1000='), 1000) == pytest.approx(99.9)
+    assert worst_window_identity(1, ex('1X1000='), 10) == pytest.approx(90.0)
+    assert worst_window_identity(1, ex('1X1000='), 100) == pytest.approx(99.0)
+    assert worst_window_identity(1, ex('1X1000='), 1000) == pytest.approx(99.9)
 
-    assert worst_window_identity(ex('1000=1X'), 10) == pytest.approx(90.0)
-    assert worst_window_identity(ex('1000=1X'), 100) == pytest.approx(99.0)
-    assert worst_window_identity(ex('1000=1X'), 1000) == pytest.approx(99.9)
+    assert worst_window_identity(1, ex('1000=1X'), 10) == pytest.approx(90.0)
+    assert worst_window_identity(1, ex('1000=1X'), 100) == pytest.approx(99.0)
+    assert worst_window_identity(1, ex('1000=1X'), 1000) == pytest.approx(99.9)
 
-    assert worst_window_identity(ex('1000=1X10=1X1000='), 1000) == pytest.approx(99.8)
-    assert worst_window_identity(ex('1000=1X100=1X1000='), 1000) == pytest.approx(99.8)
-    assert worst_window_identity(ex('1000=1X998=1X1000='), 1000) == pytest.approx(99.8)
-    assert worst_window_identity(ex('1000=1X999=1X1000='), 1000) == pytest.approx(99.9)
+    assert worst_window_identity(2, ex('1000=1X10=1X1000='), 1000) == pytest.approx(99.8)
+    assert worst_window_identity(2, ex('1000=1X100=1X1000='), 1000) == pytest.approx(99.8)
+    assert worst_window_identity(2, ex('1000=1X998=1X1000='), 1000) == pytest.approx(99.8)
+    assert worst_window_identity(2, ex('1000=1X999=1X1000='), 1000) == pytest.approx(99.9)
 
-    assert worst_window_identity(ex('1000=5I10=5D1000='), 1000) == pytest.approx(99.0)
-    assert worst_window_identity(ex('1000=5I100=5D1000='), 1000) == pytest.approx(99.0)
-    assert worst_window_identity(ex('1000=5I1000=5D1000='), 1000) == pytest.approx(99.5)
+    assert worst_window_identity(10, ex('1000=5I10=5D1000='), 1000) == pytest.approx(99.0)
+    assert worst_window_identity(10, ex('1000=5I100=5D1000='), 1000) == pytest.approx(99.0)
+    assert worst_window_identity(10, ex('1000=5I1000=5D1000='), 1000) == pytest.approx(99.5)
 
-    assert worst_window_identity(ex('50=1X49='), 10) == pytest.approx(90.0)
-    assert worst_window_identity(ex('50=1X49='), 50) == pytest.approx(98.0)
-    assert worst_window_identity(ex('50=1X49='), 100) == pytest.approx(99.0)
-    assert worst_window_identity(ex('50=1X49='), 1000) == pytest.approx(99.0)
-    assert worst_window_identity(ex('50=1X49='), 1000000) == pytest.approx(99.0)
+    assert worst_window_identity(1, ex('50=1X49='), 10) == pytest.approx(90.0)
+    assert worst_window_identity(1, ex('50=1X49='), 50) == pytest.approx(98.0)
+    assert worst_window_identity(1, ex('50=1X49='), 100) == pytest.approx(99.0)
+    assert worst_window_identity(1, ex('50=1X49='), 1000) == pytest.approx(99.0)
+    assert worst_window_identity(1, ex('50=1X49='), 1000000) == pytest.approx(99.0)
 
 
 def test_get_cigar():
