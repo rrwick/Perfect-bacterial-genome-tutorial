@@ -199,7 +199,7 @@ def make_diff_ranges(diff_pos, padding, merge, aligned_len):
     for p in diff_pos:
         start = max(0, p-padding)
         end = min(aligned_len, p+padding+1)
-        if not last_diff_pos:  # this is the first diff
+        if last_diff_pos is None:  # this is the first diff
             diff_ranges.append((start, end))
         elif p - last_diff_pos <= merge:   # this diff is close to the previous diff
             prev_start = diff_ranges[-1][0]
@@ -664,6 +664,12 @@ def test_make_diff_ranges():
     diff_ranges = make_diff_ranges(diff_pos, padding, merge, aligned_len)
     assert diff_ranges == [(0, 13), (185, 200)]
 
+    diff_pos = [0, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 18, 19, 21, 24, 25, 26, 27, 28, 30]
+    padding = 15
+    merge = 30
+    aligned_len = 100
+    diff_ranges = make_diff_ranges(diff_pos, padding, merge, aligned_len)
+    assert diff_ranges == [(0, 46)]
 
 def test_worst_window_identity():
     import pytest
